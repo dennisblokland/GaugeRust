@@ -1,0 +1,9 @@
+{
+  "Screens": [
+    { "Gauge": { "Type": "EvaDial", "DataSource": "Rpm", "Unit": "RPM", "MaxValue": 9000, "WarnValue": 7000 } },
+    { "Gauge": { "Type": "EvaHoneycomb", "DataSource": "Map", "Unit": "kPa", "MaxValue": 250, "WarnValue": 200 } },
+    { "Gauge": { "Type": "EvaReadout", "DataSource": "AfrCurr1", "Unit": ":1", "MinValue": 10, "MaxValue": 20, "Decimals": 1 } },
+    { "Gauge": { "Type": "EvaWarning", "DataSource": "Clt", "Unit": "°C", "MinValue": 40, "MaxValue": 120, "WarnValue": 105 } },
+    { "Gauge": { "Type": "EvaGear", "DataSource": "GearPos", "MaxValue": 6 } }
+  ]
+}

@@ -10,7 +10,7 @@ The app was originally written in C#. Rust replaced it; the C# code is in the gi
 
 - Live gauge rendering at 60 fps on the device, repainting only what changed
 - BLE connection to Motorsport Electronics ECU (CAN bus frames ME1_1–ME1_8)
-- Multiple built-in gauge styles: circular, sweep, needle, TurboXs, bar, digital, histogram, min/max, grid
+- Multiple built-in gauge styles: circular, sweep, needle, TurboXs, bar, digital, histogram, min/max, grid, and five EVA-style gauges (dial, honeycomb, readout, warning, gear)
 - **Custom gauge designer** — drag-and-drop desktop app (`gauge-designer`) that exports JSON definitions for the device and previews with the renderer the device runs, pixel for pixel
 - 17 custom element types: arcs, zone arcs, needles (with image support), text, value displays, label+value boxes, tick rings, bars, warning indicators, images, value-driven gifs, clocks, mini graphs, peak markers, and more
 - **Calculated channels** — define virtual data sources as math expressions (`Rpm / 1000`, `OilTemp - Iat`) evaluated each frame
@@ -111,6 +111,33 @@ A `gauges.json` or custom gauge written for the C# app works as it is: copy it n
 ```
 
 ![TurboXs gauge](docs/turboxs-gauge.png) ![TurboXs gauge with Lcd](docs/turboxs-gauge-lcd.png)
+
+## EVA Gauges
+
+Five full-screen gauges in one style: black background, orange line work, seven-segment readouts and a kanji label for each ECU channel. They share one set of drawing widgets (`gauge-render/src/gauges/eva/`), and each binds to one `DataSource` like the other built-in gauges.
+
+| Type | Shows |
+|------|-------|
+| `EvaDial` | 270° segmented ring with ticks, a red zone from `WarnValue` and a centre readout. `LIMIT` blinks in the zone. Ranges of 2000 and up label the scale in thousands. |
+| `EvaHoneycomb` | Four rows of hexagon cells that light up to the value: green below 0 (vacuum on a relative boost channel), orange, red above `WarnValue` |
+| `EvaReadout` | Large readout, three zone chips and a scale bar. On an AFR channel the zones are RICH / STOICH / LEAN (14.2 and 15.2 by default) and lambda is shown; on others LOW / NORMAL / HIGH. |
+| `EvaWarning` | Vertical segment bar and a badge: 警告 WARNING (red, blinking) at or above `WarnValue`, else 正常 NOMINAL |
+| `EvaGear` | Large gear digit and a column of positions. 0 is N, below 0 is R; `MaxValue` from 1 to 10 sets the forward gears (else 6). |
+
+| Setting | Meaning |
+|---|---|
+| `MinValue`, `MaxValue` | Scale range |
+| `WarnValue` | The limit: redline, overboost, overheat, or the lean edge on `EvaReadout`. Unset takes a share of the range. |
+| `WarnLowValue` | `EvaReadout` only: the lower zone edge (rich below it) |
+| `Title` | Overrides the English title; the kanji comes from the data source |
+| `Unit`, `Decimals` | As on the other gauges |
+
+`ColorHex` is ignored: the palette is fixed. The kanji are drawn with Noto Serif JP Black (SIL OFL 1.1, license in `gauge-render/fonts`), subset to the labels in `gauges/eva/mod.rs`; a new label needs its characters added to the subset. See `examples/eva.json`.
+
+```json
+{ "Gauge": { "Type": "EvaDial", "DataSource": "Rpm", "Unit": "RPM", "MaxValue": 9000, "WarnValue": 7000 } }
+{ "Gauge": { "Type": "EvaWarning", "DataSource": "Clt", "Unit": "°C", "MinValue": 40, "MaxValue": 120, "WarnValue": 105 } }
+```
 
 ## Custom Gauge System
 

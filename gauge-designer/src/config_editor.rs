@@ -50,6 +50,11 @@ fn extra(t: GaugeType) -> &'static [Field] {
 		GaugeType::Needle | GaugeType::Sweep => SMOOTH,
 		GaugeType::TurboXs => TURBOXS,
 		GaugeType::Digital | GaugeType::Custom | GaugeType::Grid => &[],
+		GaugeType::EvaDial
+		| GaugeType::EvaHoneycomb
+		| GaugeType::EvaReadout
+		| GaugeType::EvaWarning
+		| GaugeType::EvaGear => &[],
 	}
 }
 

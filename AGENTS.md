@@ -36,6 +36,7 @@ ROCKNIX: see `rocknix/README.md`. The OS is detected at runtime (`JoystickLayout
 
 - `gauge-app/src/display.rs` — Creates the SDL2 window, streams frames into a texture, uploads only damaged rects
 - `gauge-render/src/gauges/*.rs` — Built-in gauges cache static content as trimmed `Sprite`s and redraw what moves
+- `gauge-render/src/gauges/eva/` — The five `Eva*` gauges; `mod.rs` holds their shared palette, screen frame and widgets (segment bars, segmented arcs, hexagons, chips, panels, seven-segment readouts). Kanji come from `text::jp_typeface`, a subset font: add new characters to the subset
 - `gauge-app/src/feed.rs` — `Feed` supplies values from the ECU (`me-ble`) or `Simulator` (`sim.rs`), chosen by `DemoMode` / `--demo`, or by L1 + R1 while the link is down (`Feed::switch_to_demo` stops the link on its own thread, because dropping `BleLink` can block for seconds)
 - SDL can only be initialised on one thread, so a second `#[test]` that opens a `Display` silently skips. Add SDL scenarios to `game_loop_navigates_resets_and_exits` in `gauge-app/src/app.rs`
 - `me_data::decode` dispatches CAN frames by `Pid` to typed structs; `MeData` aggregates decoded values

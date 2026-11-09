@@ -15,10 +15,15 @@ pub enum GaugeType {
 	Grid,
 	Custom,
 	TurboXs,
+	EvaDial,
+	EvaHoneycomb,
+	EvaReadout,
+	EvaWarning,
+	EvaGear,
 }
 
 impl GaugeType {
-	pub const ALL: [GaugeType; 10] = [
+	pub const ALL: [GaugeType; 15] = [
 		Self::Bar,
 		Self::Circular,
 		Self::Histogram,
@@ -29,6 +34,11 @@ impl GaugeType {
 		Self::Grid,
 		Self::Custom,
 		Self::TurboXs,
+		Self::EvaDial,
+		Self::EvaHoneycomb,
+		Self::EvaReadout,
+		Self::EvaWarning,
+		Self::EvaGear,
 	];
 
 	/// The C# enum name (also its JSON spelling).
@@ -44,6 +54,11 @@ impl GaugeType {
 			Self::Grid => "Grid",
 			Self::Custom => "Custom",
 			Self::TurboXs => "TurboXs",
+			Self::EvaDial => "EvaDial",
+			Self::EvaHoneycomb => "EvaHoneycomb",
+			Self::EvaReadout => "EvaReadout",
+			Self::EvaWarning => "EvaWarning",
+			Self::EvaGear => "EvaGear",
 		}
 	}
 
@@ -159,6 +174,12 @@ pub struct GaugeConfig {
 	pub lcd_ghosting: f32,
 	#[serde(deserialize_with = "null_as_default")]
 	pub cells: Vec<GridCellConfig>,
+	/// Eva gauges: the limit (redline, overboost, overheat); unset takes a share of the range.
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub warn_value: Option<f32>,
+	/// EvaReadout: the lower zone edge (rich below it on an AFR channel).
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub warn_low_value: Option<f32>,
 }
 
 impl Default for GaugeConfig {
@@ -183,6 +204,8 @@ impl Default for GaugeConfig {
 			lcd: false,
 			lcd_ghosting: 0.2,
 			cells: Vec::new(),
+			warn_value: None,
+			warn_low_value: None,
 		}
 	}
 }

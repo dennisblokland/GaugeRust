@@ -89,6 +89,11 @@ fn fields_for(gauge: &GaugeConfig) -> Vec<Field> {
 		GaugeType::TurboXs => &[Smoothing, StatusMode, Lcd, LcdGhosting],
 		GaugeType::Grid => return std::iter::once(Type).chain((0..gauge.cells.len()).map(Cell)).collect(),
 		GaugeType::Digital | GaugeType::Custom => &[],
+		GaugeType::EvaDial
+		| GaugeType::EvaHoneycomb
+		| GaugeType::EvaReadout
+		| GaugeType::EvaWarning
+		| GaugeType::EvaGear => &[],
 	};
 	COMMON.iter().chain(extra).copied().collect()
 }

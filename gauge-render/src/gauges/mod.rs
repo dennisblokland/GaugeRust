@@ -5,6 +5,7 @@ mod bar;
 mod circular;
 mod config;
 mod digital;
+mod eva;
 mod grid;
 mod histogram;
 mod minmax;
@@ -17,6 +18,7 @@ pub use bar::BarGauge;
 pub use circular::CircularGauge;
 pub use config::{AppConfig, GaugeConfig, GaugeType, GridCellConfig, ScreenConfig};
 pub use digital::DigitalGauge;
+pub use eva::{EvaDialGauge, EvaGearGauge, EvaHoneycombGauge, EvaReadoutGauge, EvaWarningGauge};
 pub use grid::GridGauge;
 pub use histogram::HistogramGauge;
 pub use minmax::MinMaxGauge;
@@ -221,6 +223,11 @@ pub fn create_gauge(config: &GaugeConfig, width: u32, height: u32) -> Box<dyn Ga
 		GaugeType::Sweep => Box::new(SweepGauge::new(config, width, height)),
 		GaugeType::MinMax => Box::new(MinMaxGauge::new(config, width, height)),
 		GaugeType::Grid => Box::new(GridGauge::new(config, width, height)),
+		GaugeType::EvaDial => Box::new(EvaDialGauge::new(config, width, height)),
+		GaugeType::EvaHoneycomb => Box::new(EvaHoneycombGauge::new(config, width, height)),
+		GaugeType::EvaReadout => Box::new(EvaReadoutGauge::new(config, width, height)),
+		GaugeType::EvaWarning => Box::new(EvaWarningGauge::new(config, width, height)),
+		GaugeType::EvaGear => Box::new(EvaGearGauge::new(config, width, height)),
 		GaugeType::Bar | GaugeType::Custom => Box::new(BarGauge::new(config, width, height)),
 	};
 	if config.gauge_type != GaugeType::Grid {

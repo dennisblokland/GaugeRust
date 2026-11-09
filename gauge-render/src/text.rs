@@ -49,6 +49,11 @@ impl Typeface {
 
 	/// Advance width of `text` at `size` px, like `SKFont.MeasureText`
 	/// (no kerning, matching Skia's unshaped `DrawText`).
+	/// Whether the font has a glyph for `c` (not just `.notdef`).
+	pub fn has_glyph(&self, c: char) -> bool {
+		self.font.glyph_id(c).0 != 0
+	}
+
 	pub fn measure(&self, text: &str, size: f32) -> f32 {
 		let s = size / self.units_per_em;
 		text.chars().map(|c| self.font.h_advance_unscaled(self.font.glyph_id(c)) * s).sum()
@@ -153,6 +158,14 @@ pub fn typeface(key: &str) -> &'static Typeface {
 		"Saira Extra Condensed" => &f.saira_xc,
 		_ => &f.barlow,
 	}
+}
+
+/// Noto Serif JP Black (SIL OFL 1.1), subset to the kanji labels of the EVA
+/// gauges (`gauges::eva`). It has no Latin glyphs, so it isn't one of the
+/// [`FONT_KEYS`] offered to custom gauges.
+pub fn jp_typeface() -> &'static Typeface {
+	static JP: OnceLock<Typeface> = OnceLock::new();
+	JP.get_or_init(|| Typeface::load("Noto Serif JP", include_bytes!("../fonts/NotoSerifJP-Black-subset.otf")))
 }
 
 /// Font keys available to gauge definitions.
