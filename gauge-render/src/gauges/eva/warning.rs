@@ -77,6 +77,7 @@ impl EvaWarningGauge {
 		self.static_layer = Some(render_static(self.size.0, self.size.1, |c| {
 			draw_background(c);
 			screen_frame(c, &labels, w, h);
+			super::draw_logo(c, &labels, 500.0, 296.0, 116.0, 116.0);
 			segment_bar(c, BAR_X, BAR_Y, BAR_W, BAR_H, SEGMENTS, 3.0, true, |i| Some(unlit[i]));
 			for i in 0..SCALE_LABELS {
 				let t = i as f32 / (SCALE_LABELS - 1) as f32;
@@ -106,6 +107,8 @@ impl Gauge for EvaWarningGauge {
 		if let Some(s) = &self.static_layer {
 			canvas.draw_sprite(s);
 		}
+		let alarm = self.base.value >= self.warn;
+		super::status_line(canvas, self.size.1 as f32, alarm, self.blink.on(0.9));
 		let w = self.size.0 as f32;
 		let value = self.base.value;
 		segment_bar(canvas, BAR_X, BAR_Y, BAR_W, BAR_H, SEGMENTS, 3.0, true, |i| {

@@ -114,7 +114,7 @@ A `gauges.json` or custom gauge written for the C# app works as it is: copy it n
 
 ## EVA Gauges
 
-Five full-screen gauges in one style: black background, orange line work, seven-segment readouts and a kanji label for each ECU channel. They share one set of drawing widgets (`gauge-render/src/gauges/eva/`), and each binds to one `DataSource` like the other built-in gauges.
+Five full-screen gauges in one style: black background with a faint honeycomb, orange line work, seven-segment readouts, a kanji label for each ECU channel, and a `SYSTEM STATUS` line that turns to a blinking red WARNING past the limit. They share one set of drawing widgets (`gauge-render/src/gauges/eva/`), and each binds to one `DataSource` like the other built-in gauges.
 
 | Type | Shows |
 |------|-------|
@@ -131,6 +131,7 @@ Five full-screen gauges in one style: black background, orange line work, seven-
 | `WarnLowValue` | `EvaReadout` only: the lower zone edge (rich below it) |
 | `Title` | Overrides the English title; the kanji comes from the data source |
 | `Unit`, `Decimals` | As on the other gauges |
+| `LogoImage` | Optional image (PNG, JPG, WebP, ...) drawn in a free corner of each screen; relative paths are next to the executable. SVG isn't supported, so export a PNG with a transparent background. |
 
 `ColorHex` is ignored: the palette is fixed. The kanji are drawn with Noto Serif JP Black (SIL OFL 1.1, license in `gauge-render/fonts`), subset to the labels in `gauges/eva/mod.rs`; a new label needs its characters added to the subset. See `examples/eva.json`.
 

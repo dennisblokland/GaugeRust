@@ -79,6 +79,7 @@ impl EvaDialGauge {
 		self.static_layer = Some(render_static(self.size.0, self.size.1, |c| {
 			draw_background(c);
 			screen_frame(c, &labels, w, h);
+			super::draw_logo(c, &labels, 520.0, 44.0, 100.0, 100.0);
 			if let Some(oval) = rect(CX - OUTER_RING, CY - OUTER_RING, CX + OUTER_RING, CY + OUTER_RING) {
 				c.draw_arc(oval, START_DEG, SWEEP_DEG, &Paint::stroke(FAINT, 1.5));
 			}
@@ -138,6 +139,8 @@ impl Gauge for EvaDialGauge {
 		if let Some(s) = &self.static_layer {
 			canvas.draw_sprite(s);
 		}
+		let alarm = self.base.value >= self.warn;
+		super::status_line(canvas, self.size.1 as f32, alarm, self.blink.on(0.9));
 		let value = self.base.value;
 		let lit = (self.base.fraction(value) * SEGMENTS as f32).round() as usize;
 		let warn = self.warn;

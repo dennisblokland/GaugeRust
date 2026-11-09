@@ -180,6 +180,10 @@ pub struct GaugeConfig {
 	/// EvaReadout: the lower zone edge (rich below it on an AFR channel).
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub warn_low_value: Option<f32>,
+	/// Eva gauges: an image (PNG, JPG, WebP, ...) drawn on the screen;
+	/// relative paths are next to the executable.
+	#[serde(deserialize_with = "null_as_default", skip_serializing_if = "String::is_empty")]
+	pub logo_image: String,
 }
 
 impl Default for GaugeConfig {
@@ -206,6 +210,7 @@ impl Default for GaugeConfig {
 			cells: Vec::new(),
 			warn_value: None,
 			warn_low_value: None,
+			logo_image: String::new(),
 		}
 	}
 }

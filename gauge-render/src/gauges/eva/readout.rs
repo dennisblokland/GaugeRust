@@ -36,6 +36,7 @@ pub struct EvaReadoutGauge {
 	afr: bool,
 	decimals: i32,
 	size: (u32, u32),
+	blink: super::Blink,
 	static_layer: Option<Sprite>,
 }
 
@@ -55,6 +56,7 @@ impl EvaReadoutGauge {
 			afr,
 			decimals: if afr { config.decimals.max(1) } else { config.decimals },
 			size: (width, height),
+			blink: super::Blink::new(),
 			static_layer: None,
 		}
 	}
@@ -124,6 +126,7 @@ impl EvaReadoutGauge {
 		self.static_layer = Some(render_static(self.size.0, self.size.1, |c| {
 			draw_background(c);
 			screen_frame(c, &labels, w, h);
+			super::draw_logo(c, &labels, 40.0, 100.0, 110.0, 110.0);
 			panel(c, PANEL_X, PANEL_Y, w - 48.0, PANEL_H, ORANGE, &tab, None);
 			segment_bar(c, 24.0, BAR_Y, w - 48.0, BAR_H, BAR_SEGMENTS, 3.0, false, |i| Some(bar_colors[i]));
 			for (x, label) in &marks {
@@ -152,6 +155,8 @@ impl Gauge for EvaReadoutGauge {
 		if let Some(s) = &self.static_layer {
 			canvas.draw_sprite(s);
 		}
+		let alarm = self.zone(self.base.value) == Zone::High;
+		super::status_line(canvas, self.size.1 as f32, alarm, self.blink.on(0.9));
 		let w = self.size.0 as f32;
 		let value = self.base.value;
 		let zone = self.zone(value);

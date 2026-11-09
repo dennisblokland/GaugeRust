@@ -11,8 +11,8 @@
 //! | `EvaGear` | Large gear digit with a column of gear positions |
 //!
 //! `WarnValue` sets the limit (redline, overboost, overheat); without it each
-//! gauge takes a share of the `MinValue`–`MaxValue` range. `ColorHex` is
-//! ignored: the palette is fixed.
+//! gauge takes a share of the `MinValue`–`MaxValue` range. `LogoImage` adds
+//! an image in a free corner. `ColorHex` is ignored: the palette is fixed.
 
 mod dial;
 mod gear;
@@ -26,9 +26,10 @@ pub use honeycomb::EvaHoneycombGauge;
 pub use readout::EvaReadoutGauge;
 pub use warning::EvaWarningGauge;
 
+use std::sync::Arc;
 use std::time::Instant;
 
-use tiny_skia::{LineCap, PathBuilder};
+use tiny_skia::{LineCap, PathBuilder, Pixmap};
 
 use crate::canvas::{arc_path, rect, Canvas, Paint};
 use crate::color::Rgba;
@@ -54,6 +55,8 @@ pub(crate) const BLUE: Rgba = Rgba::rgb(0x4A, 0x9B, 0xFF);
 pub(crate) const BLUE_UNLIT: Rgba = Rgba::rgb(0x0B, 0x16, 0x26);
 pub(crate) const INK: Rgba = Rgba::rgb(0x08, 0x07, 0x06);
 pub(crate) const WHITE: Rgba = Rgba::rgb(0xFF, 0xF4, 0xE0);
+const HEX_LINE: Rgba = Rgba::rgb(0x1C, 0x0E, 0x05);
+const HEX_BACKDROP_W: f32 = 46.0;
 
 /// Labels and titles.
 pub(crate) fn label_font() -> &'static Typeface {
@@ -101,13 +104,14 @@ fn channel(source: &str) -> Option<&'static (&'static str, &'static str, &'stati
 }
 
 /// The screen's labels: `Title` (or the channel's English name), its kanji
-/// and the data source shown at the top right.
-#[derive(Clone, Debug)]
+/// and the data source shown at the top right, plus the `LogoImage`.
+#[derive(Clone)]
 pub(crate) struct Labels {
 	pub title: String,
 	pub kanji: Option<&'static str>,
 	pub source: String,
 	pub unit: String,
+	pub logo: Option<Arc<Pixmap>>,
 }
 
 impl Labels {
@@ -118,7 +122,39 @@ impl Labels {
 		} else {
 			known.map_or_else(|| config.data_source.to_uppercase(), |c| c.1.to_string())
 		};
-		Self { title, kanji: known.map(|c| c.2), source: config.data_source.to_uppercase(), unit: config.unit.clone() }
+		Self {
+			title,
+			kanji: known.map(|c| c.2),
+			source: config.data_source.to_uppercase(),
+			unit: config.unit.clone(),
+			logo: load_logo(&config.logo_image),
+		}
+	}
+}
+
+/// Loads `LogoImage` (any format the image elements take), resolved next to
+/// the executable like other relative paths. Empty or unreadable gives none.
+fn load_logo(path: &str) -> Option<Arc<Pixmap>> {
+	let path = path.trim();
+	if path.is_empty() {
+		return None;
+	}
+	let logo = crate::images::ImageCache::default().load(path, None);
+	if logo.is_none() {
+		eprintln!("[eva] could not load LogoImage {path}");
+	}
+	logo
+}
+
+/// Draws the logo, if there is one, as large as fits the box `x, y, w, h`
+/// while keeping its shape, centred in it.
+pub(crate) fn draw_logo(c: &mut Canvas, labels: &Labels, x: f32, y: f32, w: f32, h: f32) {
+	let Some(logo) = &labels.logo else { return };
+	let (iw, ih) = (logo.width() as f32, logo.height() as f32);
+	let scale = (w / iw).min(h / ih);
+	let (dw, dh) = (iw * scale, ih * scale);
+	if let Some(dest) = rect(x + (w - dw) / 2.0, y + (h - dh) / 2.0, x + (w + dw) / 2.0, y + (h + dh) / 2.0) {
+		c.draw_image(logo, dest, 1.0);
 	}
 }
 
@@ -243,6 +279,7 @@ pub(crate) fn corner_brackets(c: &mut Canvas, x: f32, y: f32, w: f32, h: f32, le
 /// The title strip and corner marks every EVA screen shares: an orange block,
 /// the title, its kanji, a rule and the data source at the right.
 pub(crate) fn screen_frame(c: &mut Canvas, labels: &Labels, w: f32, h: f32) {
+	hex_backdrop(c, w, h);
 	fill_rect(c, 20.0, 16.0, 8.0, 22.0, ORANGE);
 	let mut x = 38.0;
 	text(c, &labels.title, x, 35.0, TextAlign::Left, label_font(), 24.0, TITLE);
@@ -270,9 +307,48 @@ pub(crate) fn jp_or_title(c: &mut Canvas, labels: &Labels, x: f32, baseline: f32
 	}
 }
 
-/// Small centred print along the bottom of the screen.
+/// A faint honeycomb across the whole screen, behind everything else.
+pub(crate) fn hex_backdrop(c: &mut Canvas, w: f32, h: f32) {
+	let (hw, hh) = (HEX_BACKDROP_W, HEX_BACKDROP_W * 2.0 / 3f32.sqrt());
+	let paint = Paint::stroke(HEX_LINE, 1.0);
+	let rows = (h / (hh * 0.75)).ceil() as i32 + 1;
+	let cols = (w / hw).ceil() as i32 + 1;
+	for row in 0..rows {
+		let offset = if row % 2 == 1 { hw / 2.0 } else { 0.0 };
+		for col in -1..cols {
+			let (cx, cy) = (col as f32 * hw + offset, row as f32 * hh * 0.75);
+			let (x2, q) = (hw / 2.0, hh / 4.0);
+			let points = [
+				(cx, cy - hh / 2.0),
+				(cx + x2, cy - q),
+				(cx + x2, cy + q),
+				(cx, cy + hh / 2.0),
+				(cx - x2, cy + q),
+				(cx - x2, cy - q),
+			];
+			polygon(c, &points, &paint);
+		}
+	}
+}
+
+/// `SYSTEM STATUS` at the bottom left: NORMAL in orange, or WARNING in
+/// red (blinking with `blink_on`) once the gauge is past its limit.
+pub(crate) fn status_line(c: &mut Canvas, h: f32, alarm: bool, blink_on: bool) {
+	let y = h - 16.0;
+	text(c, "SYSTEM STATUS:", 24.0, y, TextAlign::Left, small_font(), 15.0, DIM);
+	let x = 24.0 + small_font().measure("SYSTEM STATUS: ", 15.0);
+	if alarm {
+		if blink_on {
+			text(c, "WARNING", x, y, TextAlign::Left, small_font(), 15.0, RED_TEXT);
+		}
+	} else {
+		text(c, "NORMAL", x, y, TextAlign::Left, small_font(), 15.0, AMBER);
+	}
+}
+
+/// Small print along the bottom right of the screen.
 pub(crate) fn footer(c: &mut Canvas, s: &str, w: f32, h: f32) {
-	text(c, s, w / 2.0, h - 16.0, TextAlign::Center, small_font(), 15.0, DIM);
+	text(c, s, w - 24.0, h - 16.0, TextAlign::Right, small_font(), 15.0, DIM);
 }
 
 /// A bordered panel with a filled tab at its top-left corner holding `label`

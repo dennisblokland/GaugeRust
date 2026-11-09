@@ -72,6 +72,7 @@ impl EvaGearGauge {
 		self.static_layer = Some(render_static(self.size.0, self.size.1, |c| {
 			draw_background(c);
 			screen_frame(c, &labels, w, h);
+			super::draw_logo(c, &labels, 52.0, 104.0, 100.0, 100.0);
 			panel(c, PANEL_X, PANEL_Y, PANEL_W, PANEL_H, ORANGE, "POSITION", None);
 			for ((x, y, cw, ch), g) in chips {
 				chip(c, x, y, cw, ch, &gear_label(g), None);
@@ -98,6 +99,8 @@ impl Gauge for EvaGearGauge {
 		if let Some(s) = &self.static_layer {
 			canvas.draw_sprite(s);
 		}
+		let alarm = false;
+		super::status_line(canvas, self.size.1 as f32, alarm, false);
 		let gear = self.base.value.round() as i32;
 		let gear = gear.clamp(-1, self.gears);
 		let font = typeface("DSEG14 Classic");

@@ -35,6 +35,7 @@ pub struct EvaHoneycombGauge {
 	warn: f32,
 	decimals: i32,
 	size: (u32, u32),
+	blink: super::Blink,
 	cells: Vec<Cell>,
 	static_layer: Option<Sprite>,
 }
@@ -62,6 +63,7 @@ impl EvaHoneycombGauge {
 			warn: warn_value(config, 0.8),
 			decimals: config.decimals.max(if max - min <= 10.0 { 2 } else { 0 }),
 			size: (width, height),
+			blink: super::Blink::new(),
 			cells,
 			static_layer: None,
 		}
@@ -86,6 +88,7 @@ impl EvaHoneycombGauge {
 		self.static_layer = Some(render_static(self.size.0, self.size.1, |c| {
 			draw_background(c);
 			screen_frame(c, &labels, w, h);
+			super::draw_logo(c, &labels, 240.0, 52.0, 116.0, 116.0);
 			jp_or_title(c, &labels, 24.0, 136.0, 64.0);
 			let unit = if labels.unit.is_empty() { labels.source.clone() } else { labels.unit.to_uppercase() };
 			text(c, &unit, w - 24.0, 172.0, TextAlign::Right, super::label_font(), 20.0, DIM);
@@ -144,6 +147,8 @@ impl Gauge for EvaHoneycombGauge {
 		if let Some(s) = &self.static_layer {
 			canvas.draw_sprite(s);
 		}
+		let alarm = self.base.value > self.warn;
+		super::status_line(canvas, self.size.1 as f32, alarm, self.blink.on(0.9));
 		let value = self.base.value;
 		for cell in self.cells.iter().filter(|c| c.value <= value) {
 			let color = if cell.value < 0.0 {
