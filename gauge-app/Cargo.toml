@@ -23,5 +23,5 @@ ble-vendored = ["ble", "me-ble/vendored-dbus"]
 gauge-render = { path = "../gauge-render" }
 me-data = { path = "../me-data" }
 me-ble = { path = "../me-ble", optional = true }
-sdl2 = { version = "0.38", optional = true }
+sdl2 = { version = "0.39", optional = true }
 serde_json = "1"
